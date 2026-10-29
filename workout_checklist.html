@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>데일리 운동 기록</title>
+<style>
+:root{--bg:#f2f5fb;--card:#fff;--tx:#14213d;--sub:#6b7692;--line:#e4e9f4;--c1:#ff6b35;--c2:#ff9f1c;--run:#16c79a;--push:#4f6bff;--swim:#00b4d8;--hang:#a855f7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#192038;--tx:#f1f4fc;--sub:#94a0bf;--line:#29324f}}
+:root[data-theme="dark"]{--bg:#0e1424;--card:#192038;--tx:#f1f4fc;--sub:#94a0bf;--line:#29324f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;max-width:520px;margin:0 auto;padding:0 14px 40px}
+header{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;margin:0 -14px;padding:22px 18px 28px;border-radius:0 0 28px 28px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;opacity:.9;font-size:14px}
+.card{background:var(--card);border-radius:20px;padding:16px;margin-top:14px;box-shadow:0 2px 10px rgba(20,33,61,.06)}
+.card h2{margin:0 0 12px;font-size:16px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.nav b{font-size:17px}
+.nav button,.step button{width:44px;height:44px;border:0;border-radius:14px;background:var(--bg);color:var(--tx);font-size:20px;font-weight:700}
+.nav button:active,.step button:active{transform:scale(.93)}
+.tog{display:flex;gap:10px}
+.tog label{flex:1;height:64px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:18px;border:2px solid var(--line);background:var(--bg);color:var(--sub);font-size:16px;font-weight:700}.tog input{width:26px;height:26px;margin:0}.tog label.s input{accent-color:var(--swim)}.tog label.h input{accent-color:var(--hang)}
+.tog label.on.s{border-color:var(--swim);color:var(--tx);background:var(--card)}
+.tog label.on.h{border-color:var(--hang);color:var(--tx);background:var(--card)}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:8px}
+.row label{font-weight:700;font-size:15px}
+.step{display:flex;align-items:center;gap:6px}
+.step input{width:76px;height:44px;border:2px solid var(--line);border-radius:14px;background:var(--bg);color:var(--tx);text-align:center;font-size:18px;font-weight:700}
+.step span{color:var(--sub);font-size:13px;width:22px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border-radius:16px;padding:12px;color:#fff}
+.stat small{opacity:.9;font-size:12px}
+.stat div{font-size:26px;font-weight:800}
+.bars{display:flex;align-items:flex-end;gap:2px;height:130px;margin-top:6px}
+.bars i{flex:1;border-radius:4px 4px 0 0;min-height:2px;background:var(--line);position:relative}
+.bars i.sel{outline:2px solid var(--tx);outline-offset:1px}
+.lab{display:flex;gap:2px;margin-top:4px;font-size:9px;color:var(--sub)}
+.lab span{flex:1;text-align:center;overflow:visible;white-space:nowrap}
+.big{font-size:34px;font-weight:800}
+.big small{font-size:14px;color:var(--sub);font-weight:600}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.dots i{aspect-ratio:1;border-radius:50%;background:var(--line);font-style:normal;font-size:10px;display:grid;place-items:center;color:var(--sub)}
+.sum{font-size:13px;color:var(--sub);margin:0 0 6px}
+</style>
+</head>
+<body>
+<header><h1>🔥 데일리 운동 기록</h1><p id="hd"></p></header>
+<div id="app"></div>
+<script>
+var K='workout-tracker-v1',D={};
+try{D=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){D={}}
+function save(){try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}}
+var pad=function(n){return String(n).padStart(2,'0')};
+var ds=function(y,m,d){return y+'-'+pad(m+1)+'-'+pad(d)};
+var t=new Date(),sel=ds(t.getFullYear(),t.getMonth(),t.getDate());
+var vm={y:t.getFullYear(),m:t.getMonth()};
+var WD=['일','월','화','수','목','금','토'];
+function pd(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2])}
+function setSel(s){sel=s;var d=pd(s);vm={y:d.getFullYear(),m:d.getMonth()};render()}
+function shiftDay(n){var d=pd(sel);d.setDate(d.getDate()+n);setSel(ds(d.getFullYear(),d.getMonth(),d.getDate()))}
+function shiftMonth(n){var d=new Date(vm.y,vm.m+n,1);vm={y:d.getFullYear(),m:d.getMonth()};render()}
+function put(k,v){var e=D[sel]||{};e[k]=v;if(!e.s&&!e.h&&!(e.r>0)&&!(e.p>0))delete D[sel];else D[sel]=e;save();render()}
+function num(k,v,dec){v=parseFloat(v);if(isNaN(v)||v<0)v=0;put(k,dec?Math.round(v*10)/10:Math.round(v))}
+function bump(k,n,dec){var e=D[sel]||{};num(k,(e[k]||0)+n,dec)}
+function bars(key,color,unit){
+  var n=new Date(vm.y,vm.m+1,0).getDate(),vals=[],mx=0,tot=0;
+  for(var d=1;d<=n;d++){var v=(D[ds(vm.y,vm.m,d)]||{})[key]||0;vals.push(v);tot+=v;if(v>mx)mx=v}
+  var h='<div class="bars">',l='<div class="lab">';
+  vals.forEach(function(v,i){var d=i+1,s=ds(vm.y,vm.m,d);
+    h+='<i onclick="setSel(\''+s+'\')" class="'+(s===sel?'sel':'')+'" style="height:'+(mx?Math.max(v/mx*100,v?4:0):0)+'%;'+(v?'background:'+color:'')+'" title="'+v+unit+'"></i>';
+    l+='<span>'+(d===1||d%5===0?d:'')+'</span>'});
+  return {html:h+'</div>'+l+'</div>',tot:tot}
+}
+function dots(key,color){
+  var n=new Date(vm.y,vm.m+1,0).getDate(),c=0,h='<div class="dots">';
+  for(var d=1;d<=n;d++){var on=(D[ds(vm.y,vm.m,d)]||{})[key];if(on)c++;
+    h+='<i onclick="setSel(\''+ds(vm.y,vm.m,d)+'\')" style="'+(on?'background:'+color+';color:#fff':'')+'">'+d+'</i>'}
+  return {html:h+'</div>',c:c,n:n}
+}
+function render(){
+  var e=D[sel]||{},d=pd(sel);
+  document.getElementById('hd').textContent=t.getFullYear()+'년 '+(t.getMonth()+1)+'월 '+t.getDate()+'일 · 오늘도 한 걸음 더!';
+  var R=bars('r','var(--run)','km'),P=bars('p','var(--push)','개'),S=dots('s','var(--swim)'),H=dots('h','var(--hang)');
+  var h='<div class="card"><div class="nav"><button onclick="shiftDay(-1)">‹</button><b>'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+WD[d.getDay()]+')'+(sel===ds(t.getFullYear(),t.getMonth(),t.getDate())?' · 오늘':'')+'</b><button onclick="shiftDay(1)">›</button></div>'
+  +'<div class="tog"><label class="s '+(e.s?'on':'')+'"><input type="checkbox" '+(e.s?'checked':'')+' onchange="put(\'s\',this.checked?1:0)"><span>🏊 수영</span></label>'
+  +'<label class="h '+(e.h?'on':'')+'"><input type="checkbox" '+(e.h?'checked':'')+' onchange="put(\'h\',this.checked?1:0)"><span>💪 매달리기</span></label></div>'
+  +'<div class="row"><label>🏃 달리기</label><div class="step"><button onclick="bump(\'r\',-1,1)">−</button><input type="number" inputmode="decimal" step="0.1" min="0" value="'+(e.r||0)+'" onchange="num(\'r\',this.value,1)"><span>km</span><button onclick="bump(\'r\',1,1)">+</button></div></div>'
+  +'<div class="row"><label>🔥 푸시업</label><div class="step"><button onclick="bump(\'p\',-10)">−</button><input type="number" inputmode="numeric" min="0" value="'+(e.p||0)+'" onchange="num(\'p\',this.value)"><span>개</span><button onclick="bump(\'p\',10)">+</button></div></div></div>'
+  +'<div class="card"><div class="nav"><button onclick="shiftMonth(-1)">‹</button><b>'+vm.y+'년 '+(vm.m+1)+'월</b><button onclick="shiftMonth(1)">›</button></div>'
+  +'<div class="stats"><div class="stat" style="background:var(--swim)"><small>수영</small><div>'+S.c+'일</div></div><div class="stat" style="background:var(--hang)"><small>매달리기</small><div>'+H.c+'일</div></div>'
+  +'<div class="stat" style="background:var(--run)"><small>달린 거리</small><div>'+(Math.round(R.tot*10)/10)+'km</div></div><div class="stat" style="background:var(--push)"><small>푸시업</small><div>'+P.tot+'개</div></div></div></div>'
+  +'<div class="card"><h2>🏃 달리기 (km)</h2>'+R.html+'</div>'
+  +'<div class="card"><h2>🔥 푸시업 (개)</h2>'+P.html+'</div>'
+  +'<div class="card"><h2>🏊 수영</h2><div class="big">'+S.c+'<small> / '+S.n+'일</small></div>'+S.html+'</div>'
+  +'<div class="card"><h2>💪 매달리기</h2><div class="big">'+H.c+'<small> / '+H.n+'일</small></div>'+H.html+'</div>';
+  document.getElementById('app').innerHTML=h
+}
+render();
+</script>
+</body>
+</html>

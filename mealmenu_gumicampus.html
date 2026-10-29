@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>구미캠퍼스 식단 &amp; 날씨</title>
+<style>
+:root{--bg:#f6f7f4;--card:#fff;--text:#1d2420;--muted:#66706a;--line:#e3e6e0;--accent:#2f7d5b;--accent-bg:#e4f2ea;--hl:#fff3d6;--hl-text:#8a5a00;--rain:#2f6fb0;--sky:#e6f0fa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141815;--card:#1e241f;--text:#eaf0ec;--muted:#9aa59e;--line:#2d352f;--accent:#6fcf9f;--accent-bg:#21382c;--hl:#3b3115;--hl-text:#f0c66a;--rain:#7fb4ee;--sky:#1d2b3a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141815;--card:#1e241f;--text:#eaf0ec;--muted:#9aa59e;--line:#2d352f;--accent:#6fcf9f;--accent-bg:#21382c;--hl:#3b3115;--hl-text:#f0c66a;--rain:#7fb4ee;--sky:#1d2b3a;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 2px}
+h2{font-size:17px;margin:22px 0 10px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+.hero{background:var(--sky);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px}
+.hero .ic{font-size:52px;line-height:1}
+.hero .t{font-size:34px;font-weight:700;line-height:1.1}
+.hero .t small{font-size:15px;font-weight:500;color:var(--muted)}
+.hero .d{font-size:14px;color:var(--muted)}
+.tip{margin-top:10px;font-size:14px;font-weight:600;color:var(--rain)}
+.fc{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+.day{flex:0 0 78px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.day .dd{font-size:12px;color:var(--muted)}
+.day .ic{font-size:26px;margin:4px 0}
+.day .hi{font-weight:700;font-size:15px}
+.day .lo{font-size:13px;color:var(--muted)}
+.day .pp{font-size:12px;color:var(--rain);margin-top:2px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+.tab{flex:1;min-width:52px;padding:10px 0;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.tab small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab.on small{color:#fff;opacity:.85}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.card.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.name{font-weight:700;font-size:16px}
+.time{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--accent-bg);color:var(--text);border-radius:999px;padding:4px 10px;font-size:14px}
+.chip.hl{background:var(--hl);color:var(--hl-text);font-weight:700}
+.note{font-size:12px;color:var(--muted);margin-top:14px}
+.note a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>구미캠퍼스 식단 &amp; 날씨</h1>
+  <p class="sub">한국폴리텍대학 구미캠퍼스 · 구미시 기준</p>
+
+  <h2 style="margin-top:0">🌤️ 날씨</h2>
+  <div class="hero" id="hero"></div>
+  <div class="tip" id="tip"></div>
+  <h2>10월 29일 ~ 11월 12일 예보</h2>
+  <div class="fc" id="fc"></div>
+
+  <h2>🍚 학식 메뉴</h2>
+  <div class="tabs" id="tabs"></div>
+  <div id="meals"></div>
+
+  <p class="note">※ 메뉴는 식당 운영 및 식자재 수급 상황에 따라 변경될 수 있습니다. 저녁은 수업이 있는 학생 대상으로 월~목 18시까지 운영됩니다.<br>
+  이 페이지는 학교 식단표와 AccuWeather 예보(2026.10.29 기준)를 옮겨 둔 것이라 자동으로 갱신되지 않습니다. 최신 정보는
+  <a href="https://www.kopo.ac.kr/gumi/content.do?menu=4941" target="_blank" rel="noopener">학교 식단정보</a>,
+  <a href="https://www.accuweather.com/ko/kr/gumi/223680/10-day-weather-forecast/223680" target="_blank" rel="noopener">AccuWeather</a>에서 확인하세요.</p>
+</div>
+<script>
+/* 날씨: [월, 일, 요일, 최고°F, 최저°F, 강수확률%, 날씨, 아이콘] */
+var W=[
+[10,29,"목",55,42,3,"흐리고 선선함","☁️"],[10,30,"금",70,45,2,"흐릿함","☁️"],[10,31,"토",65,40,0,"흐릿함","☁️"],
+[11,1,"일",50,47,91,"선선하고 때때로 비","🌧️"],[11,2,"월",65,37,0,"맑음","☀️"],[11,3,"화",65,43,0,"약간 흐림","🌤️"],
+[11,4,"수",64,37,0,"맑음","☀️"],[11,5,"목",66,42,2,"약간 흐림","🌤️"],[11,6,"금",70,42,2,"맑음","☀️"],
+[11,7,"토",63,42,2,"대체로 맑음","🌤️"],[11,8,"일",63,42,55,"흐리고 가벼운 비","🌧️"],[11,9,"월",64,44,55,"대체로 흐리고 가벼운 비","🌧️"],
+[11,10,"화",63,44,25,"대체로 흐림","⛅"],[11,11,"수",56,41,25,"대체로 흐림","⛅"],[11,12,"목",59,43,25,"흐림","☁️"]
+];
+function C(f){return Math.round((f-32)*5/9);}
+var now=new Date(),tm=now.getMonth()+1,td=now.getDate();
+var ti=-1;
+W.forEach(function(w,i){if(w[0]===tm&&w[1]===td)ti=i;});
+var hi=ti>=0?ti:0,w=W[hi];
+document.getElementById("hero").innerHTML=
+ '<div class="ic">'+w[7]+'</div><div><div class="t">'+C(w[3])+'° <small>/ '+C(w[4])+'°</small></div>'+
+ '<div class="d">'+w[6]+' · 강수확률 '+w[5]+'%</div>'+
+ '<div class="d">'+(ti>=0?'오늘 ':'예보 첫날 ')+w[0]+'월 '+w[1]+'일 ('+w[2]+')</div></div>';
+var tip=document.getElementById("tip");
+if(ti<0){tip.textContent="저장된 예보 기간이 지났어요. 최신 예보는 하단 링크에서 확인하세요.";}
+else if(w[5]>=60){tip.textContent="☂️ 오늘은 우산을 챙기세요!";}
+else if(C(w[4])<=5){tip.textContent="🧥 아침 기온이 낮아요. 따뜻하게 입으세요.";}
+var fc=document.getElementById("fc");
+W.forEach(function(x,i){
+ var d=document.createElement("div");
+ d.className="day"+(i===ti?" today":"");
+ d.innerHTML='<div class="dd">'+(i===ti?"오늘":x[0]+"."+x[1]+" "+x[2])+'</div><div class="ic">'+x[7]+'</div><div class="hi">'+C(x[3])+'°</div><div class="lo">'+C(x[4])+'°</div><div class="pp">💧'+x[5]+'%</div>';
+ fc.appendChild(d);
+});
+
+var DAYS=["월","화","수","목","금"];
+var TIMES={"조식":"07:50 ~ 08:40","중식":"11:50 ~ 13:10","석식":"16:50 ~ 17:40"};
+var MENU={
+"월":{"조식":"컵밥, 음료","중식":"잡곡밥, 만둣국, 돈갈비찜, 꽃맛살샐러드, 오이양파무침, 포기김치","석식":"쌀밥, 얼큰쇠고기무국, 두부조림, 모듬강정, 호박당근볶음, 포기김치"},
+"화":{"조식":"모카크림빵, 흰우유","중식":"잡곡밥, 참치김치찌개, 어니언치킨까스, 건새우마늘쫑무침, 단배추생채, 깍두기","석식":"흰밥, 돼지국밥, 야채고로케/케찹, 풋고추된장무침, 부추양파무침, 석박지/요구르트"},
+"수":{"조식":"컵밥, 음료","중식":"나가사끼짬뽕, 마파두부, 깐쇼새우, 토마토샐러드/드레싱, 포기김치, 흰밥","석식":"흰밥, 유부장국, 불닭볶음닭, 맛감자/케이준S, 케요네즈, 포기김치"},
+"목":{"조식":"모카크림빵, 흰우유","중식":"잡곡밥, 조랭이미역국, 바싹불고기/파채, 무조림, 명엽채조림, 포기김치","석식":"흰밥, 부대찌개, 계란후라이, 청양멸치볶음, 상추양파무침, 포기김치"},
+"금":{"조식":"컵밥, 음료","중식":"콩나물밥/양념장, 바지락고추장찌개, 팽이버섯짬뽕조림, 도시락김, 포기김치, 음료","석식":"쌀밥, 계란탕, 오징어당면볶음, 강된장, 양배추찜/간장, 포기김치"}
+};
+var jsDay=now.getDay();
+var todayIdx=(jsDay>=1&&jsDay<=5)?jsDay-1:-1;
+var cur=todayIdx>=0?todayIdx:0;
+function nowMeal(){
+ if(cur!==todayIdx)return "";
+ var m=now.getHours()*60+now.getMinutes();
+ if(m<=9*60)return "조식";
+ if(m<=14*60)return "중식";
+ if(m<=18*60)return "석식";
+ return "";
+}
+function render(){
+ var tabs=document.getElementById("tabs");
+ tabs.innerHTML="";
+ DAYS.forEach(function(d,i){
+  var b=document.createElement("button");
+  b.className="tab"+(i===cur?" on":"");
+  b.innerHTML=d+"<small>"+(i===todayIdx?"오늘":"&nbsp;")+"</small>";
+  b.onclick=function(){cur=i;render();};
+  tabs.appendChild(b);
+ });
+ var box=document.getElementById("meals");
+ box.innerHTML="";
+ var nm=nowMeal(),day=MENU[DAYS[cur]];
+ ["조식","중식","석식"].forEach(function(k){
+  var c=document.createElement("div");
+  c.className="card"+(k===nm?" now":"");
+  var h=document.createElement("div");
+  h.className="head";
+  h.innerHTML='<span class="name">'+(k==="조식"?"🌅 ":k==="중식"?"☀️ ":"🌙 ")+k+'</span><span class="time">'+TIMES[k]+'</span>';
+  c.appendChild(h);
+  var wr=document.createElement("div");wr.className="chips";
+  day[k].split(",").forEach(function(t){
+   t=t.trim();if(!t)return;
+   var s=document.createElement("span"),hl=t.indexOf("*")===0;
+   s.className="chip"+(hl?" hl":"");
+   s.textContent=hl?"⭐ "+t.replace(/\*/g,""):t;
+   wr.appendChild(s);
+  });
+  c.appendChild(wr);
+  box.appendChild(c);
+ });
+}
+render();
+</script>
+</body>
+</html>
